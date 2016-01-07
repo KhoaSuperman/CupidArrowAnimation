@@ -55,7 +55,7 @@
     <ImageView
         android:id="@+id/ivArrowBot"
         android:layout_width="30dp"
-        android:visibility="visible"
+        android:visibility="invisible"
         android:layout_height="30dp"
         android:tint="#516582"
         android:src="@mipmap/arrow_bot" />

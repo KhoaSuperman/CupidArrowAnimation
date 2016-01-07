@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 /**
  * Created by HoangAnhKhoa on 1/7/16.
  */
-public class PreferenceUtil {
+public class Prefs {
 
     public static final String PREF = "pirvot";
 

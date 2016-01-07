@@ -1,15 +1,10 @@
 package test.com.demo_tablet;
 
 import android.content.Intent;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -23,9 +18,13 @@ import com.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.nineoldandroids.animation.AnimatorSet;
 import com.nineoldandroids.animation.ObjectAnimator;
 import com.nineoldandroids.view.ViewHelper;
-import com.nineoldandroids.view.animation.AnimatorProxy;
+
+import test.com.demo_tablet.util.Prefs;
 
 public class MainActivity extends AppCompatActivity {
+    public static String STICK_WIDTH_BOUND = "STICK_WIDTH_BOUND";
+    public static String ARROW_BOT_STARTX = "ARROW_BOT_STARTX";
+    public static String ARROW_BOT_STARTY = "ARROW_BOT_STARTY";
 
     public static final int DURATION_ROTATE = 700;
     public static final int DURATION_FLY = 200;
@@ -33,12 +32,14 @@ public class MainActivity extends AppCompatActivity {
     public static float HEART_ROTATE = 140f;
 
     //TODO: need to calculate
-    public static float STICK_WIDTH_BOUND = 206.28279f;
-    private float ARROW_BOT_STARTX = 786.447f;
-    private float ARROW_BOT_STARTY = 1434.447f;
+//    public static float stick_width_bound = 206.28279f;
+//    private float arrow_bot_startx = 786.447f;
+//    private float arrow_bot_starty = 1434.447f;
+    public static float stick_width_bound = 0;
+    private float arrow_bot_startx = 0;
+    private float arrow_bot_starty = 0;
 
     public static float STICK_ROTATE = 140f;
-
 
     ImageView imageView;
     ImageView ivArrowBot;
@@ -60,13 +61,18 @@ public class MainActivity extends AppCompatActivity {
         ivArrowBot = (ImageView) findViewById(R.id.ivArrowBot);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
+        //init animation values
         int pivotY = vStick.getLayoutParams().height;
         float pivotX = vStick.getLayoutParams().width / 2;
         ViewHelper.setPivotY(vStick, pivotY);
         ViewHelper.setPivotX(vStick, pivotX);
-
-        ivArrowBot.setX(600);
-        ivArrowBot.setY(600);
+        //get cached values
+        stick_width_bound = Prefs.getFloat(getBaseContext(), STICK_WIDTH_BOUND);
+        arrow_bot_startx = Prefs.getFloat(getBaseContext(), ARROW_BOT_STARTX);
+        arrow_bot_starty = Prefs.getFloat(getBaseContext(), ARROW_BOT_STARTY);
+        if(stick_width_bound != 0){
+            progressBar.setVisibility(View.GONE);
+        }
 
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -84,8 +90,8 @@ public class MainActivity extends AppCompatActivity {
                 //arrow bottom appear
                 AnimatorSet animArrowBottomAppear = new AnimatorSet();
                 animRotate.playTogether(
-                        ObjectAnimator.ofFloat(ivArrowBot, "translationX", vStick.getX(), vStick.getX() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredWidth() - 45),
-                        ObjectAnimator.ofFloat(ivArrowBot, "translationY", vStick.getY(), vStick.getY() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredHeight() - 0),
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationX", vStick.getX(), vStick.getX() + stick_width_bound - ivArrowBot.getMeasuredWidth() - 45),
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationY", vStick.getY(), vStick.getY() + stick_width_bound - ivArrowBot.getMeasuredHeight() - 0),
                         ObjectAnimator.ofFloat(ivArrowBot, "scaleX", 0.3f, 1f),
                         ObjectAnimator.ofFloat(ivArrowBot, "scaleY", 0.3f, 1f)
                 );
@@ -97,8 +103,8 @@ public class MainActivity extends AppCompatActivity {
                         ObjectAnimator.ofFloat(imageView, "translationY", 0, FLY_Y),
                         ObjectAnimator.ofFloat(vStick, "translationX", 0, FLY_Y),
                         ObjectAnimator.ofFloat(vStick, "translationY", 0, FLY_Y),
-                        ObjectAnimator.ofFloat(ivArrowBot, "translationX", ARROW_BOT_STARTX, ARROW_BOT_STARTX + FLY_Y),
-                        ObjectAnimator.ofFloat(ivArrowBot, "translationY", ARROW_BOT_STARTY, ARROW_BOT_STARTY + FLY_Y)
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationX", arrow_bot_startx, arrow_bot_startx + FLY_Y),
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationY", arrow_bot_starty, arrow_bot_starty + FLY_Y)
                 );
 
                 //config anim
@@ -114,14 +120,30 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        RectF rect = new RectF();
-                        vStick.getMatrix().mapRect(rect);
-                        STICK_WIDTH_BOUND = rect.right;
+//                        RectF rect = new RectF();
+//                        vStick.getMatrix().mapRect(rect);
+//                        STICK_WIDTH_BOUND = rect.right;
+//
+//                        ARROW_BOT_STARTX = vStick.getX() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredWidth() - 45;
+//                        ARROW_BOT_STARTY = vStick.getY() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredHeight() - 0;
 
-                        ARROW_BOT_STARTX = vStick.getX() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredWidth() - 45;
-                        ARROW_BOT_STARTY = vStick.getY() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredHeight() - 0;
+                        if (Prefs.getFloat(getBaseContext(), STICK_WIDTH_BOUND) == 0) {
+                            //calculate stick width bound
+                            RectF rect = new RectF();
+                            vStick.getMatrix().mapRect(rect);
+                            stick_width_bound = rect.right;
+                            //arrow bot start x, y
+                            arrow_bot_startx = vStick.getX() + stick_width_bound - ivArrowBot.getMeasuredWidth() - 45;
+                            arrow_bot_starty = vStick.getY() + stick_width_bound - ivArrowBot.getMeasuredHeight() - 0;
+                            //save
+                            Prefs.setFloat(getBaseContext(), STICK_WIDTH_BOUND, stick_width_bound);
+                            Prefs.setFloat(getBaseContext(), ARROW_BOT_STARTX, arrow_bot_startx);
+                            Prefs.setFloat(getBaseContext(), ARROW_BOT_STARTY, arrow_bot_starty);
+                        }
 
-                        Log.d(MyCons.LOG, "MainActivity.onAnimationEnd" + "ARROW_BOT_STARTX: " + ARROW_BOT_STARTX + ", ARROW_BOT_STARTY: " + ARROW_BOT_STARTY);
+                        progressBar.setVisibility(View.GONE);
+
+                        Log.d(MyCons.LOG, "MainActivity.onAnimationEnd" + "ARROW_BOT_STARTX: " + arrow_bot_startx + ", ARROW_BOT_STARTY: " + arrow_bot_starty);
                     }
                 });
                 animArrowBottomAppear
@@ -145,7 +167,8 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onAnimationStart(Animator animation) {
-                        resetPosition();
+                        //TODO: should remove after done cache calculate animation values
+//                        resetPosition();
                     }
                 });
                 animatorSet.start();
@@ -157,6 +180,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 animatorSet.setInterpolator(new ReverseInterpolator());
                 animatorSet.start();
+
+//                reset();
             }
         });
     }
@@ -175,10 +200,11 @@ public class MainActivity extends AppCompatActivity {
         vStick.setTranslationY(0);
     }
 
+    //http://stackoverflow.com/questions/4120824/android-reversing-an-animation
     public class ReverseInterpolator implements Interpolator {
         @Override
         public float getInterpolation(float paramFloat) {
-            return Math.abs(paramFloat -1f);
+            return Math.abs(paramFloat - 1f);
         }
     }
 }
