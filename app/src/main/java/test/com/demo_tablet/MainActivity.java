@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
@@ -13,7 +14,9 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AnticipateOvershootInterpolator;
+import android.view.animation.Interpolator;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorListenerAdapter;
@@ -25,19 +28,14 @@ import com.nineoldandroids.view.animation.AnimatorProxy;
 public class MainActivity extends AppCompatActivity {
 
     public static final int DURATION_ROTATE = 700;
-    public static final int DURATION_FLY = 300;
+    public static final int DURATION_FLY = 200;
     public static final int FLY_Y = -400;
-    public static float HEART_START_X = 0;
-    public static float HEART_START_Y = 0;
     public static float HEART_ROTATE = 140f;
-
-    public static float STICK_START_X = 0;
-    public static float STICK_START_Y = 0;
 
     //TODO: need to calculate
     public static float STICK_WIDTH_BOUND = 206.28279f;
     private float ARROW_BOT_STARTX = 786.447f;
-    private float ARROW_BOT_STARTY = 1266.447f;
+    private float ARROW_BOT_STARTY = 1434.447f;
 
     public static float STICK_ROTATE = 140f;
 
@@ -46,6 +44,10 @@ public class MainActivity extends AppCompatActivity {
     ImageView ivArrowBot;
     View vStick;
     View vStickBg;
+
+    ProgressBar progressBar;
+
+    final AnimatorSet animatorSet = new AnimatorSet();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         vStick = findViewById(R.id.stick);
         vStickBg = findViewById(R.id.stickBackground);
         ivArrowBot = (ImageView) findViewById(R.id.ivArrowBot);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         int pivotY = vStick.getLayoutParams().height;
         float pivotX = vStick.getLayoutParams().width / 2;
@@ -68,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 //rotate
                 AnimatorSet animRotate = new AnimatorSet();
                 animRotate.playTogether(
@@ -126,10 +128,26 @@ public class MainActivity extends AppCompatActivity {
                         .setDuration(DURATION_ROTATE);
                 animFly.setDuration(DURATION_FLY)
                         .setInterpolator(new AccelerateDecelerateInterpolator());
+                animFly.setStartDelay(200);
 
                 //chain
-                AnimatorSet animatorSet = new AnimatorSet();
                 animatorSet.playSequentially(animRotate, animArrowBottomAppear, animFly);
+                animatorSet.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+//                                reset();
+                            }
+                        }, 5000);
+                    }
+
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        resetPosition();
+                    }
+                });
                 animatorSet.start();
             }
         });
@@ -137,10 +155,30 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnReset).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(getBaseContext(), MainActivity.class));
-                finish();
+                animatorSet.setInterpolator(new ReverseInterpolator());
+                animatorSet.start();
             }
         });
     }
 
+    private void reset() {
+        startActivity(new Intent(getBaseContext(), MainActivity.class));
+        finish();
+    }
+
+    private void resetPosition() {
+        imageView.setTranslationX(0);
+        imageView.setTranslationY(0);
+        ivArrowBot.setTranslationX(0);
+        ivArrowBot.setTranslationY(0);
+        vStick.setTranslationX(0);
+        vStick.setTranslationY(0);
+    }
+
+    public class ReverseInterpolator implements Interpolator {
+        @Override
+        public float getInterpolation(float paramFloat) {
+            return Math.abs(paramFloat -1f);
+        }
+    }
 }
