@@ -12,6 +12,7 @@ import android.view.animation.AnticipateOvershootInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorListenerAdapter;
@@ -19,6 +20,7 @@ import com.nineoldandroids.animation.AnimatorSet;
 import com.nineoldandroids.animation.ObjectAnimator;
 import com.nineoldandroids.view.ViewHelper;
 
+import de.hdodenhof.circleimageview.CircleImageView;
 import test.com.demo_tablet.util.Prefs;
 
 public class MainActivity extends AppCompatActivity {
@@ -26,9 +28,9 @@ public class MainActivity extends AppCompatActivity {
     public static String ARROW_BOT_STARTX = "ARROW_BOT_STARTX";
     public static String ARROW_BOT_STARTY = "ARROW_BOT_STARTY";
 
-    public static final int DURATION_ROTATE = 700;
+    public static final int DURATION_ROTATE = 400;
     public static final int DURATION_FLY = 200;
-    public static final int FLY_Y = -400;
+    public static float FLY_Y = -400;
     public static float HEART_ROTATE = 140f;
 
     //TODO: need to calculate
@@ -45,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     ImageView ivArrowBot;
     View vStick;
     View vStickBg;
+    CircleImageView ivAvatar;
+
 
     ProgressBar progressBar;
 
@@ -60,12 +64,20 @@ public class MainActivity extends AppCompatActivity {
         vStickBg = findViewById(R.id.stickBackground);
         ivArrowBot = (ImageView) findViewById(R.id.ivArrowBot);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        ivAvatar = (CircleImageView) findViewById(R.id.ivAvatar);
 
         //init animation values
         int pivotY = vStick.getLayoutParams().height;
         float pivotX = vStick.getLayoutParams().width / 2;
         ViewHelper.setPivotY(vStick, pivotY);
         ViewHelper.setPivotX(vStick, pivotX);
+        //location on screen of image avatar
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+//                FLY_Y = ivAvatar.getY();
+            }
+        }, 1000);
         //get cached values
         stick_width_bound = Prefs.getFloat(getBaseContext(), STICK_WIDTH_BOUND);
         arrow_bot_startx = Prefs.getFloat(getBaseContext(), ARROW_BOT_STARTX);
