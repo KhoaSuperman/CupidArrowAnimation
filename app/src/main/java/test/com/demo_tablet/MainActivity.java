@@ -1,11 +1,15 @@
 package test.com.demo_tablet;
 
+import android.content.Intent;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AnticipateOvershootInterpolator;
@@ -20,9 +24,26 @@ import com.nineoldandroids.view.animation.AnimatorProxy;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final int DURATION_ROTATE = 800;
+    public static final int DURATION_ROTATE = 700;
     public static final int DURATION_FLY = 300;
+    public static final int FLY_Y = -400;
+    public static float HEART_START_X = 0;
+    public static float HEART_START_Y = 0;
+    public static float HEART_ROTATE = 140f;
+
+    public static float STICK_START_X = 0;
+    public static float STICK_START_Y = 0;
+
+    //TODO: need to calculate
+    public static float STICK_WIDTH_BOUND = 206.28279f;
+    private float ARROW_BOT_STARTX = 786.447f;
+    private float ARROW_BOT_STARTY = 1266.447f;
+
+    public static float STICK_ROTATE = 140f;
+
+
     ImageView imageView;
+    ImageView ivArrowBot;
     View vStick;
     View vStickBg;
 
@@ -34,45 +55,90 @@ public class MainActivity extends AppCompatActivity {
         imageView = (ImageView) findViewById(R.id.ivImage);
         vStick = findViewById(R.id.stick);
         vStickBg = findViewById(R.id.stickBackground);
+        ivArrowBot = (ImageView) findViewById(R.id.ivArrowBot);
+
+        int pivotY = vStick.getLayoutParams().height;
+        float pivotX = vStick.getLayoutParams().width / 2;
+        ViewHelper.setPivotY(vStick, pivotY);
+        ViewHelper.setPivotX(vStick, pivotX);
+
+        ivArrowBot.setX(600);
+        ivArrowBot.setY(600);
 
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ViewHelper.setPivotY(vStick, 0);
-                ViewHelper.setPivotX(vStick, 0);
 
                 //rotate
                 AnimatorSet animRotate = new AnimatorSet();
                 animRotate.playTogether(
-                        ObjectAnimator.ofFloat(imageView, "rotation", 0f, 135f),
-                        ObjectAnimator.ofFloat(imageView, "scaleX", 1f, 0.5f),
-                        ObjectAnimator.ofFloat(imageView, "scaleY", 1f, 0.5f),
-                        ObjectAnimator.ofFloat(vStickBg, "translationY", 0f, -vStickBg.getHeight()),
-                        ObjectAnimator.ofFloat(vStickBg, "rotation", 0f, 135f),
-                        ObjectAnimator.ofFloat(vStick, "rotation", 0f, 135f)
+                        ObjectAnimator.ofFloat(imageView, "rotation", 0f, HEART_ROTATE),
+                        ObjectAnimator.ofFloat(imageView, "scaleX", 1f, 0.4f),
+                        ObjectAnimator.ofFloat(imageView, "scaleY", 1f, 0.4f),
+                        ObjectAnimator.ofFloat(vStick, "scaleY", 1f, 9f),
+                        ObjectAnimator.ofFloat(vStick, "rotation", 0f, STICK_ROTATE)
+                );
+
+                //arrow bottom appear
+                AnimatorSet animArrowBottomAppear = new AnimatorSet();
+                animRotate.playTogether(
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationX", vStick.getX(), vStick.getX() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredWidth() - 45),
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationY", vStick.getY(), vStick.getY() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredHeight() - 0),
+                        ObjectAnimator.ofFloat(ivArrowBot, "scaleX", 0.3f, 1f),
+                        ObjectAnimator.ofFloat(ivArrowBot, "scaleY", 0.3f, 1f)
                 );
 
                 //fly
                 final AnimatorSet animFly = new AnimatorSet();
-                int fly = -500;
                 animFly.playTogether(
-                        ObjectAnimator.ofFloat(imageView, "translationX", 0, fly),
-                        ObjectAnimator.ofFloat(imageView, "translationY", 0, fly)
+                        ObjectAnimator.ofFloat(imageView, "translationX", 0, FLY_Y),
+                        ObjectAnimator.ofFloat(imageView, "translationY", 0, FLY_Y),
+                        ObjectAnimator.ofFloat(vStick, "translationX", 0, FLY_Y),
+                        ObjectAnimator.ofFloat(vStick, "translationY", 0, FLY_Y),
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationX", ARROW_BOT_STARTX, ARROW_BOT_STARTX + FLY_Y),
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationY", ARROW_BOT_STARTY, ARROW_BOT_STARTY + FLY_Y)
                 );
 
                 //config anim
                 animRotate
                         .setDuration(DURATION_ROTATE)
                         .setInterpolator(new AnticipateOvershootInterpolator());
+                animRotate.addListener(new AnimatorListenerAdapter() {
+
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        ivArrowBot.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        RectF rect = new RectF();
+                        vStick.getMatrix().mapRect(rect);
+                        STICK_WIDTH_BOUND = rect.right;
+
+                        ARROW_BOT_STARTX = vStick.getX() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredWidth() - 45;
+                        ARROW_BOT_STARTY = vStick.getY() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredHeight() - 0;
+
+                        Log.d(MyCons.LOG, "MainActivity.onAnimationEnd" + "ARROW_BOT_STARTX: " + ARROW_BOT_STARTX + ", ARROW_BOT_STARTY: " + ARROW_BOT_STARTY);
+                    }
+                });
+                animArrowBottomAppear
+                        .setDuration(DURATION_ROTATE);
                 animFly.setDuration(DURATION_FLY)
                         .setInterpolator(new AccelerateDecelerateInterpolator());
 
                 //chain
                 AnimatorSet animatorSet = new AnimatorSet();
-                animatorSet.playSequentially(animRotate, animFly);
+                animatorSet.playSequentially(animRotate, animArrowBottomAppear, animFly);
                 animatorSet.start();
+            }
+        });
 
-
+        findViewById(R.id.btnReset).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getBaseContext(), MainActivity.class));
+                finish();
             }
         });
     }
