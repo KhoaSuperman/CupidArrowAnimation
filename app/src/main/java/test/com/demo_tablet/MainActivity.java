@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static final int DURATION_ROTATE = 400;
     public static final int DURATION_FLY = 200;
+    public static float FLY_X = -400;
     public static float FLY_Y = -400;
     public static float HEART_ROTATE = 140f;
 
@@ -75,14 +76,23 @@ public class MainActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-//                FLY_Y = ivAvatar.getY();
+                float toX = ivAvatar.getX() + ivAvatar.getWidth() / 2 - imageView.getWidth() / 2;
+                //way 1:
+//                float toY = ivAvatar.getY() + ivAvatar.getHeight() / 2 - percentOf(imageView.getHeight(), 40);
+                //way 2:
+                float toY = ivAvatar.getY() + ivAvatar.getHeight() / 2 - imageView.getHeight() / 2;
+//                Log.d(MyCons.LOG, "MainActivity.run" + "ivAvatar.getY(): " + ivAvatar.getY() + ", ivAvatar.getHeight(): " + ivAvatar.getHeight() + ",imageView.getHeight():" + imageView.getHeight());
+//                Log.d(MyCons.LOG, "MainActivity.run" + "imageView.getY(): " + imageView.getY());
+
+                FLY_Y = -(imageView.getY() - toY);
+                FLY_X = -(imageView.getX() - toX);
             }
-        }, 1000);
+        }, 500);
         //get cached values
         stick_width_bound = Prefs.getFloat(getBaseContext(), STICK_WIDTH_BOUND);
         arrow_bot_startx = Prefs.getFloat(getBaseContext(), ARROW_BOT_STARTX);
         arrow_bot_starty = Prefs.getFloat(getBaseContext(), ARROW_BOT_STARTY);
-        if(stick_width_bound != 0){
+        if (stick_width_bound != 0) {
             progressBar.setVisibility(View.GONE);
         }
 
@@ -93,8 +103,8 @@ public class MainActivity extends AppCompatActivity {
                 AnimatorSet animRotate = new AnimatorSet();
                 animRotate.playTogether(
                         ObjectAnimator.ofFloat(imageView, "rotation", 0f, HEART_ROTATE),
-                        ObjectAnimator.ofFloat(imageView, "scaleX", 1f, 0.4f),
-                        ObjectAnimator.ofFloat(imageView, "scaleY", 1f, 0.4f),
+                        ObjectAnimator.ofFloat(imageView, "scaleX", 1f, 0.5f),
+                        ObjectAnimator.ofFloat(imageView, "scaleY", 1f, 0.5f),
                         ObjectAnimator.ofFloat(vStick, "scaleY", 1f, 9f),
                         ObjectAnimator.ofFloat(vStick, "rotation", 0f, STICK_ROTATE)
                 );
@@ -111,11 +121,11 @@ public class MainActivity extends AppCompatActivity {
                 //fly
                 final AnimatorSet animFly = new AnimatorSet();
                 animFly.playTogether(
-                        ObjectAnimator.ofFloat(imageView, "translationX", 0, FLY_Y),
+                        ObjectAnimator.ofFloat(imageView, "translationX", 0, FLY_X),
                         ObjectAnimator.ofFloat(imageView, "translationY", 0, FLY_Y),
-                        ObjectAnimator.ofFloat(vStick, "translationX", 0, FLY_Y),
+                        ObjectAnimator.ofFloat(vStick, "translationX", 0, FLY_X),
                         ObjectAnimator.ofFloat(vStick, "translationY", 0, FLY_Y),
-                        ObjectAnimator.ofFloat(ivArrowBot, "translationX", arrow_bot_startx, arrow_bot_startx + FLY_Y),
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationX", arrow_bot_startx, arrow_bot_startx + FLY_X),
                         ObjectAnimator.ofFloat(ivArrowBot, "translationY", arrow_bot_starty, arrow_bot_starty + FLY_Y)
                 );
 
@@ -218,5 +228,9 @@ public class MainActivity extends AppCompatActivity {
         public float getInterpolation(float paramFloat) {
             return Math.abs(paramFloat - 1f);
         }
+    }
+
+    public float percentOf(float value, float percent) {
+        return percent * 100 / value;
     }
 }
