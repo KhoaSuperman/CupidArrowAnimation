@@ -4,12 +4,15 @@ import android.content.Intent;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AnticipateOvershootInterpolator;
+import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -49,11 +52,12 @@ public class MainActivity extends AppCompatActivity {
     View vStick;
     View vStickBg;
     CircleImageView ivAvatar;
-
+    View vCircle;
 
     ProgressBar progressBar;
 
     final AnimatorSet animatorSet = new AnimatorSet();
+    boolean isReset = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         ivArrowBot = (ImageView) findViewById(R.id.ivArrowBot);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         ivAvatar = (CircleImageView) findViewById(R.id.ivAvatar);
+        vCircle = findViewById(R.id.circle);
 
         //init animation values
         int pivotY = vStick.getLayoutParams().height;
@@ -109,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 //arrow bottom appear
                 AnimatorSet animArrowBottomAppear = new AnimatorSet();
                 animRotate.playTogether(
+                        ObjectAnimator.ofFloat(ivArrowBot, "alpha", 0.0f, 1.0f),
                         ObjectAnimator.ofFloat(ivArrowBot, "translationX", vStick.getX(), arrow_bot_startx),
                         ObjectAnimator.ofFloat(ivArrowBot, "translationY", vStick.getY(), arrow_bot_starty),
                         ObjectAnimator.ofFloat(ivArrowBot, "scaleX", 0.3f, 1f),
@@ -116,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 );
 
                 //fly
-                final AnimatorSet animFly = new AnimatorSet();
+                AnimatorSet animFly = new AnimatorSet();
                 animFly.playTogether(
                         ObjectAnimator.ofFloat(imageView, "translationX", 0, FLY_X),
                         ObjectAnimator.ofFloat(imageView, "translationY", 0, FLY_Y),
@@ -126,16 +132,50 @@ public class MainActivity extends AppCompatActivity {
                         ObjectAnimator.ofFloat(ivArrowBot, "translationY", arrow_bot_starty, arrow_bot_starty + FLY_Y)
                 );
 
+                //avatar alpha change
+                AnimatorSet animAlpha = new AnimatorSet();
+                animFly.playTogether(
+                        ObjectAnimator.ofFloat(ivAvatar, "alpha", 1.0f, 0.3f)
+                );
+
+                //expand circle
+                AnimatorSet animCollapse = new AnimatorSet();
+                animFly.playTogether(
+                        ObjectAnimator.ofFloat(vCircle, "scaleX", 1.0f, 0.0f),
+                        ObjectAnimator.ofFloat(vCircle, "scaleY", 1.0f, 0.0f)
+                );
+                animFly
+                        .setDuration(0);
+                AnimatorSet animExpand = new AnimatorSet();
+                animFly.playTogether(
+                        ObjectAnimator.ofFloat(vCircle, "scaleX", 0.0f, 1.0f),
+                        ObjectAnimator.ofFloat(vCircle, "scaleY", 0.0f, 1.0f),
+                        ObjectAnimator.ofFloat(vCircle, "alpha", 0.0f, 1.0f)
+                );
+                animExpand
+                        .setDuration(700)
+                        .setInterpolator(new BounceInterpolator());
+                animExpand.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        ivAvatar.setAlpha(1.0f);
+                        if (!isReset) {
+                            ivAvatar.setBorderColorResource(R.color.colorPrimary);
+                            showArrow(false);
+                        }
+                    }
+                });
+                ObjectAnimator alphaDown = ObjectAnimator.ofFloat(vCircle, "alpha", 1.0f, 0.0f);
+                alphaDown.setDuration(400);
+
+                AnimatorSet animCircleExpand = new AnimatorSet();
+                animCircleExpand.playSequentially(animCollapse, animExpand, alphaDown);
+
                 //config anim
                 animRotate
                         .setDuration(DURATION_ROTATE)
                         .setInterpolator(new AnticipateOvershootInterpolator());
                 animRotate.addListener(new AnimatorListenerAdapter() {
-
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                        ivArrowBot.setVisibility(View.VISIBLE);
-                    }
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
@@ -161,27 +201,24 @@ public class MainActivity extends AppCompatActivity {
                 });
                 animArrowBottomAppear
                         .setDuration(DURATION_ROTATE);
-                animFly.setDuration(DURATION_FLY)
-                        .setInterpolator(new AccelerateDecelerateInterpolator());
-                animFly.setStartDelay(200);
+                animFly
+                        .setDuration(DURATION_FLY)
+                        .setInterpolator(new FastOutLinearInInterpolator());
+                animFly.setStartDelay(300);
+                animAlpha
+                        .setDuration(DURATION_FLY + DURATION_ROTATE);
 
                 //chain
-                animatorSet.playSequentially(animRotate, animArrowBottomAppear, animFly);
+                animatorSet.playSequentially(animRotate, animArrowBottomAppear, animFly, animAlpha, animCircleExpand);
                 animatorSet.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-//                                reset();
-                            }
-                        }, 5000);
+                        isReset = false;
                     }
 
                     @Override
                     public void onAnimationStart(Animator animation) {
-                        //TODO: should remove after done cache calculate animation values
-//                        resetPosition();
+                        showArrow(true);
                     }
                 });
                 animatorSet.start();
@@ -191,10 +228,11 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnReset).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isReset = true;
+                ivAvatar.setBorderColorResource(R.color.gray);
                 animatorSet.setInterpolator(new ReverseInterpolator());
                 animatorSet.start();
-
-//                reset();
+                showArrow(true);
             }
         });
     }
@@ -211,6 +249,12 @@ public class MainActivity extends AppCompatActivity {
         ivArrowBot.setTranslationY(0);
         vStick.setTranslationX(0);
         vStick.setTranslationY(0);
+    }
+
+    public void showArrow(boolean show) {
+        ivArrowBot.setVisibility(show ? View.VISIBLE : View.GONE);
+        imageView.setVisibility(show ? View.VISIBLE : View.GONE);
+        vStick.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     //http://stackoverflow.com/questions/4120824/android-reversing-an-animation

@@ -20,7 +20,18 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="60dp"
         android:alpha="1"
-        android:src="@mipmap/sample_ava" />
+        android:src="@mipmap/sample_ava"
+        app:civ_border_color="@color/gray"
+        app:civ_border_width="10dp" />
+
+    <View
+        android:id="@+id/circle"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:alpha="0.0"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="60dp"
+        android:background="@drawable/circle" />
 
     <Button
         android:id="@+id/btnReset"
@@ -67,7 +78,7 @@
         android:layout_height="30dp"
         android:src="@mipmap/arrow_bot"
         android:tint="#516582"
-        android:visibility="invisible" />
+        android:alpha="0.0" />
 
     <ProgressBar
         android:id="@+id/progressBar"
