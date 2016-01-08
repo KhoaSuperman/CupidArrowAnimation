@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int DURATION_FLY = 200;
     public static float FLY_X = -400;
     public static float FLY_Y = -400;
-    public static float HEART_ROTATE = 140f;
+    public static float HEART_ROTATE = 155f;
 
     //TODO: need to calculate
 //    public static float stick_width_bound = 206.28279f;
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private float arrow_bot_startx = 0;
     private float arrow_bot_starty = 0;
 
-    public static float STICK_ROTATE = 140f;
+    public static float STICK_ROTATE = 155f;
 
     ImageView imageView;
     ImageView ivArrowBot;
@@ -77,12 +77,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 float toX = ivAvatar.getX() + ivAvatar.getWidth() / 2 - imageView.getWidth() / 2;
-                //way 1:
-//                float toY = ivAvatar.getY() + ivAvatar.getHeight() / 2 - percentOf(imageView.getHeight(), 40);
-                //way 2:
                 float toY = ivAvatar.getY() + ivAvatar.getHeight() / 2 - imageView.getHeight() / 2;
-//                Log.d(MyCons.LOG, "MainActivity.run" + "ivAvatar.getY(): " + ivAvatar.getY() + ", ivAvatar.getHeight(): " + ivAvatar.getHeight() + ",imageView.getHeight():" + imageView.getHeight());
-//                Log.d(MyCons.LOG, "MainActivity.run" + "imageView.getY(): " + imageView.getY());
 
                 FLY_Y = -(imageView.getY() - toY);
                 FLY_X = -(imageView.getX() - toX);
@@ -94,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
         arrow_bot_starty = Prefs.getFloat(getBaseContext(), ARROW_BOT_STARTY);
         if (stick_width_bound != 0) {
             progressBar.setVisibility(View.GONE);
+        } else {
+            imageView.performClick();
         }
 
         imageView.setOnClickListener(new View.OnClickListener() {
@@ -112,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
                 //arrow bottom appear
                 AnimatorSet animArrowBottomAppear = new AnimatorSet();
                 animRotate.playTogether(
-                        ObjectAnimator.ofFloat(ivArrowBot, "translationX", vStick.getX(), vStick.getX() + stick_width_bound - ivArrowBot.getMeasuredWidth() - 45),
-                        ObjectAnimator.ofFloat(ivArrowBot, "translationY", vStick.getY(), vStick.getY() + stick_width_bound - ivArrowBot.getMeasuredHeight() - 0),
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationX", vStick.getX(), arrow_bot_startx),
+                        ObjectAnimator.ofFloat(ivArrowBot, "translationY", vStick.getY(), arrow_bot_starty),
                         ObjectAnimator.ofFloat(ivArrowBot, "scaleX", 0.3f, 1f),
                         ObjectAnimator.ofFloat(ivArrowBot, "scaleY", 0.3f, 1f)
                 );
@@ -142,12 +139,6 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
-//                        RectF rect = new RectF();
-//                        vStick.getMatrix().mapRect(rect);
-//                        STICK_WIDTH_BOUND = rect.right;
-//
-//                        ARROW_BOT_STARTX = vStick.getX() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredWidth() - 45;
-//                        ARROW_BOT_STARTY = vStick.getY() + STICK_WIDTH_BOUND - ivArrowBot.getMeasuredHeight() - 0;
 
                         if (Prefs.getFloat(getBaseContext(), STICK_WIDTH_BOUND) == 0) {
                             //calculate stick width bound
@@ -155,8 +146,8 @@ public class MainActivity extends AppCompatActivity {
                             vStick.getMatrix().mapRect(rect);
                             stick_width_bound = rect.right;
                             //arrow bot start x, y
-                            arrow_bot_startx = vStick.getX() + stick_width_bound - ivArrowBot.getMeasuredWidth() - 45;
-                            arrow_bot_starty = vStick.getY() + stick_width_bound - ivArrowBot.getMeasuredHeight() - 0;
+                            arrow_bot_startx = vStick.getX() + stick_width_bound - ivArrowBot.getMeasuredWidth() - 35;
+                            arrow_bot_starty = vStick.getY() + stick_width_bound - ivArrowBot.getMeasuredHeight() + 80;
                             //save
                             Prefs.setFloat(getBaseContext(), STICK_WIDTH_BOUND, stick_width_bound);
                             Prefs.setFloat(getBaseContext(), ARROW_BOT_STARTX, arrow_bot_startx);
