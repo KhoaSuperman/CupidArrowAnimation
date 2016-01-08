@@ -13,6 +13,7 @@ import android.view.animation.AnticipateOvershootInterpolator;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -53,8 +54,9 @@ public class MainActivity extends AppCompatActivity {
     View vStickBg;
     CircleImageView ivAvatar;
     View vCircle;
+    Button btnReset;
 
-    ProgressBar progressBar;
+    View vLoading;
 
     final AnimatorSet animatorSet = new AnimatorSet();
     boolean isReset = false;
@@ -68,9 +70,10 @@ public class MainActivity extends AppCompatActivity {
         vStick = findViewById(R.id.stick);
         vStickBg = findViewById(R.id.stickBackground);
         ivArrowBot = (ImageView) findViewById(R.id.ivArrowBot);
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
         ivAvatar = (CircleImageView) findViewById(R.id.ivAvatar);
         vCircle = findViewById(R.id.circle);
+        vLoading = findViewById(R.id.loading);
+        btnReset = (Button) findViewById(R.id.btnReset);
 
         //init animation values
         int pivotY = vStick.getLayoutParams().height;
@@ -92,11 +95,6 @@ public class MainActivity extends AppCompatActivity {
         stick_width_bound = Prefs.getFloat(getBaseContext(), STICK_WIDTH_BOUND);
         arrow_bot_startx = Prefs.getFloat(getBaseContext(), ARROW_BOT_STARTX);
         arrow_bot_starty = Prefs.getFloat(getBaseContext(), ARROW_BOT_STARTY);
-        if (stick_width_bound != 0) {
-            progressBar.setVisibility(View.GONE);
-        } else {
-            imageView.performClick();
-        }
 
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -193,9 +191,6 @@ public class MainActivity extends AppCompatActivity {
                             Prefs.setFloat(getBaseContext(), ARROW_BOT_STARTX, arrow_bot_startx);
                             Prefs.setFloat(getBaseContext(), ARROW_BOT_STARTY, arrow_bot_starty);
                         }
-
-                        progressBar.setVisibility(View.GONE);
-
                         Log.d(MyCons.LOG, "MainActivity.onAnimationEnd" + "ARROW_BOT_STARTX: " + arrow_bot_startx + ", ARROW_BOT_STARTY: " + arrow_bot_starty);
                     }
                 });
@@ -235,6 +230,30 @@ public class MainActivity extends AppCompatActivity {
                 showArrow(true);
             }
         });
+
+        if (stick_width_bound != 0) {
+            vLoading.setVisibility(View.GONE);
+        } else {
+            //For init animation values
+            //1. click on heart icon for perform animation. Ex: stick_width_bound, arrow_bot_startx, arrow_bot_starty
+            imageView.performClick();
+
+            //2. after finish, perform reset animation
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    btnReset.performClick();
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            //3. done calculate animation values
+                            vLoading.setVisibility(View.GONE);
+                        }
+                    }, animatorSet.getDuration());
+                }
+            }, 7000);
+        }
+
     }
 
     private void reset() {

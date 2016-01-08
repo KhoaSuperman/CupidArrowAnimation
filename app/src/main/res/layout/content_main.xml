@@ -28,9 +28,9 @@
         android:id="@+id/circle"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:alpha="0.0"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="60dp"
+        android:alpha="0.0"
         android:background="@drawable/circle" />
 
     <Button
@@ -76,16 +76,24 @@
         android:id="@+id/ivArrowBot"
         android:layout_width="30dp"
         android:layout_height="30dp"
+        android:alpha="0.0"
         android:src="@mipmap/arrow_bot"
-        android:tint="#516582"
-        android:alpha="0.0" />
+        android:tint="#516582" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:indeterminate="true" />
+    <RelativeLayout
+        android:id="@+id/loading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Loading ..."
+            android:textColor="@color/white" />
+
+    </RelativeLayout>
 
 
 </RelativeLayout>
