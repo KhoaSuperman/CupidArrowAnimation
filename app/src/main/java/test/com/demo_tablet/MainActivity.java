@@ -34,14 +34,10 @@ public class MainActivity extends AppCompatActivity {
 
     public static final int DURATION_ROTATE = 400;
     public static final int DURATION_FLY = 350;
-    public static float FLY_X = -400;
-    public static float FLY_Y = -400;
+    public static float FLY_X = 0;
+    public static float FLY_Y = 0;
     public static float HEART_ROTATE = 155f;
 
-    //TODO: need to calculate
-//    public static float stick_width_bound = 206.28279f;
-//    private float arrow_bot_startx = 786.447f;
-//    private float arrow_bot_starty = 1434.447f;
     public static float stick_width_bound = 0;
     private float arrow_bot_startx = 0;
     private float arrow_bot_starty = 0;
@@ -80,6 +76,9 @@ public class MainActivity extends AppCompatActivity {
         float pivotX = vStick.getLayoutParams().width / 2;
         ViewHelper.setPivotY(vStick, pivotY);
         ViewHelper.setPivotX(vStick, pivotX);
+
+//        ivArrowBot.setX(733);
+//        ivArrowBot.setY(1152);
         //location on screen of image avatar
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -178,14 +177,35 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onAnimationEnd(Animator animation) {
 
-                        if (Prefs.getFloat(getBaseContext(), STICK_WIDTH_BOUND) == 0) {
+                        //take a look at R.drawable.pirvot_animation explanation first
+                        if (
+//                                true
+                                Prefs.getFloat(getBaseContext(), STICK_WIDTH_BOUND) == 0
+                                ) {
                             //calculate stick width bound
                             RectF rect = new RectF();
                             vStick.getMatrix().mapRect(rect);
                             stick_width_bound = rect.right;
                             //arrow bot start x, y
-                            arrow_bot_startx = vStick.getX() + stick_width_bound - ivArrowBot.getMeasuredWidth() - 35;
-                            arrow_bot_starty = vStick.getY() + stick_width_bound - ivArrowBot.getMeasuredHeight() + 80;
+                            //Cy
+                            float AB = rect.bottom;
+                            float Ay = vStick.getY();
+                            float Cy = Ay + AB;
+                            float HC = AB / 4;
+                            float Hy = Cy - HC;
+
+                            float BC = (float) (Math.tan(Math.toRadians(180 - HEART_ROTATE)) * AB);
+                            float Bx = vStick.getX();
+                            float Cx = Bx + BC;
+                            float KH = (float) (Math.tan(Math.toRadians(180 - HEART_ROTATE)) * HC);
+                            float Kx = Cx - KH;
+                            //hot fix: -1/2 of width of arrowbottom
+                            Kx = Kx - ivArrowBot.getWidth() / 4;
+
+                            //final result
+                            arrow_bot_starty = Hy;
+                            arrow_bot_startx = Kx;
+
                             //save
                             Prefs.setFloat(getBaseContext(), STICK_WIDTH_BOUND, stick_width_bound);
                             Prefs.setFloat(getBaseContext(), ARROW_BOT_STARTX, arrow_bot_startx);
