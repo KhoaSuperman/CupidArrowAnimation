@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     public static String ARROW_BOT_STARTY = "ARROW_BOT_STARTY";
 
     public static final int DURATION_ROTATE = 400;
-    public static final int DURATION_FLY = 200;
+    public static final int DURATION_FLY = 350;
     public static float FLY_X = -400;
     public static float FLY_Y = -400;
     public static float HEART_ROTATE = 155f;
